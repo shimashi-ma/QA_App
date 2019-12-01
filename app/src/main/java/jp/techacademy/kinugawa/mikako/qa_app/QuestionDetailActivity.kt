@@ -2,6 +2,7 @@ package jp.techacademy.kinugawa.mikako.qa_app
 
 import android.content.Intent
 import android.os.Bundle
+import android.preference.PreferenceManager
 import android.support.design.widget.FloatingActionButton
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
@@ -35,11 +36,14 @@ class QuestionDetailActivity : AppCompatActivity() {
     //お気に入り用のフラグ
     private var mlike = false
 
-    private val mEventListener = object : ChildEventListener {
-        override fun onChildAdded(dataSnapshot: DataSnapshot, s: String?) {
-            val map = dataSnapshot.value as Map<String, String>
+    //お気に入り済かどうか　型どうしよう
+    private var mFavorite = ""
 
-            val answerUid = dataSnapshot.key ?: ""
+    private val mEventListener = object : ChildEventListener {
+                override fun onChildAdded(dataSnapshot: DataSnapshot, s: String?) {
+                    val map = dataSnapshot.value as Map<String, String>
+
+                    val answerUid = dataSnapshot.key ?: ""
 
             for (answer in mQuestion.answers) {
                 // 同じAnswerUidのものが存在しているときは何もしない
@@ -119,6 +123,9 @@ class QuestionDetailActivity : AppCompatActivity() {
         } else if (user != null) {
 
             like_fab.show()
+
+
+
 
             //お気に入り登録済かどうかFirebaseを参照
 

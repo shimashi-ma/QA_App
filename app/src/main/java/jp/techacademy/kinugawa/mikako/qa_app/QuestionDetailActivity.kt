@@ -29,16 +29,17 @@ class QuestionDetailActivity : AppCompatActivity() {
     private lateinit var mQuestion: Question
     private lateinit var mAdapter: QuestionDetailListAdapter
     private lateinit var mAnswerRef: DatabaseReference
+    private lateinit var mFavoriteRef: DatabaseReference  //お気に入り用
 
     //お気に入り用リファレンス
     private lateinit var mDataBaseReference: DatabaseReference
 
-    //お気に入り用のフラグ
+    //お気に入り用
     private var mlike = false
+    private var mFarorite = ""
 
-    //お気に入り済かどうか　型どうしよう
-    private var mFavorite = ""
 
+    //回答用
     private val mEventListener = object : ChildEventListener {
                 override fun onChildAdded(dataSnapshot: DataSnapshot, s: String?) {
                     val map = dataSnapshot.value as Map<String, String>
@@ -62,8 +63,6 @@ class QuestionDetailActivity : AppCompatActivity() {
         }
 
         override fun onChildChanged(dataSnapshot: DataSnapshot, s: String?) {
-            //val m = dataSnapshot.child(favoritesPATH)
-            //Log.d("aaa",m.toString())
 
         }
 
@@ -79,6 +78,30 @@ class QuestionDetailActivity : AppCompatActivity() {
 
         }
     }
+
+    //お気に入り用
+    private val FaroriteListener = object : ChildEventListener{
+        override fun onChildAdded(p0: DataSnapshot, p1: String?) {
+            val a = p0.value
+            mFarorite = a.toString()
+        }
+        override fun onChildChanged(dataSnapshot: DataSnapshot, s: String?) {
+
+        }
+
+        override fun onChildRemoved(dataSnapshot: DataSnapshot) {
+
+        }
+
+        override fun onChildMoved(dataSnapshot: DataSnapshot, s: String?) {
+
+        }
+
+        override fun onCancelled(databaseError: DatabaseError) {
+
+        }
+    }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -120,22 +143,35 @@ class QuestionDetailActivity : AppCompatActivity() {
 
             return
 
-        } else if (user != null) {
+        } else if (user != null && mFarorite != null) {
 
             like_fab.show()
+            Log.d("tttaaaggg",mFarorite.toString())
 
+            //画像を変更
+            like_fab.setImageResource(R.drawable.baseline_favorite_black_36)
 
 
 
             //お気に入り登録済かどうかFirebaseを参照
-
             //mDataBaseReference = FirebaseDatabase.getInstance().reference
             //mDataBaseReference.addValueEventListener( object : ValueEventListener {
             //override fun onDataChange(dataSnapshot: DataSnapshot) {
             //val value = dataSnapshot.getValue
-
             //}
             //override fun onCancelled(error: DatabaseError) {}
+
+
+        } else if (user != null && mFarorite == null) {
+
+            like_fab.show()
+            Log.d("tttaaaggg","ログインしていてかつお気に入り未登録")
+
+            //画像を変更
+            like_fab.setImageResource(R.drawable.baseline_favorite_border_black_36)
+
+
+
         }
 
 
@@ -163,6 +199,8 @@ class QuestionDetailActivity : AppCompatActivity() {
                 data["genre"] = mQuestion.genre.toString() //dateのキーはString型　genreはInt型
                 genreRef.setValue(data)
 
+                Log.d("tttaaaggg",mFarorite)
+
                 return@setOnClickListener
 
             } else if (mlike == true) {
@@ -189,8 +227,13 @@ class QuestionDetailActivity : AppCompatActivity() {
         }
 
 
+
         val dataBaseReference = FirebaseDatabase.getInstance().reference
         mAnswerRef = dataBaseReference.child(ContentsPATH).child(mQuestion.genre.toString()).child(mQuestion.questionUid).child(AnswersPATH)
         mAnswerRef.addChildEventListener(mEventListener)
+
+        //お気に入り
+        mFavoriteRef = dataBaseReference.child(favoritesPATH).child(user!!.uid).child(mQuestion.genre.toString())
+        mFavoriteRef.addChildEventListener(FaroriteListener)
     }
 }

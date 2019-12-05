@@ -85,6 +85,13 @@ class QuestionDetailActivity : AppCompatActivity() {
             mFarorite = p0.value
 
             Log.d("tttaaaggg", mFarorite.toString())
+
+            //画像を変更
+            like_fab.setImageResource(R.drawable.baseline_favorite_black_36)
+
+            //フラグを立てる
+            mlike = true
+
         }
         override fun onChildChanged(dataSnapshot: DataSnapshot, s: String?) {
 
@@ -150,21 +157,11 @@ class QuestionDetailActivity : AppCompatActivity() {
             //ボタンを表示
             like_fab.show()
 
-            //お気に入り
+            //お気に入り登録済かどうか確認する
             val dataBaseReference = FirebaseDatabase.getInstance().reference
             mFavoriteRef = dataBaseReference.child(favoritesPATH).child(user!!.uid).child(mQuestion.questionUid)
             mFavoriteRef.addChildEventListener(FaroriteListener)
 
-            if ( mFarorite != null ) {
-
-                //画像を変更
-                like_fab.setImageResource(R.drawable.baseline_favorite_black_36)
-
-                //フラグを立てる
-                mlike = true
-
-                return
-            }
 
             //お気に入りボタンをタップした場合
             like_fab.setOnClickListener {

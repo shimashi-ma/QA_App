@@ -36,7 +36,7 @@ class QuestionDetailActivity : AppCompatActivity() {
 
     //お気に入り用
     private var mlike = false
-    private var mFarorite = ""
+    private var mFarorite :Any? = null
 
 
     //回答用
@@ -82,8 +82,9 @@ class QuestionDetailActivity : AppCompatActivity() {
     //お気に入り用
     private val FaroriteListener = object : ChildEventListener{
         override fun onChildAdded(p0: DataSnapshot, p1: String?) {
-            val a = p0.value
-            mFarorite = a.toString()
+            mFarorite = p0.value
+
+            Log.d("tttaaaggg", mFarorite.toString())
         }
         override fun onChildChanged(dataSnapshot: DataSnapshot, s: String?) {
 
@@ -138,51 +139,23 @@ class QuestionDetailActivity : AppCompatActivity() {
         val user = FirebaseAuth.getInstance().currentUser
 
         if (user == null) {
-            //ログインしていない場合、お気に入りボタンを非表示にする
+
+            //ボタンを非表示にする
             like_fab.hide()
 
             return
 
-        } else if (user != null && mFarorite != null) {
+        } else if (user != null ) {
 
+            //ボタンを表示
             like_fab.show()
-            Log.d("tttaaaggg",mFarorite.toString())
 
-            //画像を変更
-            like_fab.setImageResource(R.drawable.baseline_favorite_black_36)
+            //お気に入り
+            val dataBaseReference = FirebaseDatabase.getInstance().reference
+            mFavoriteRef = dataBaseReference.child(favoritesPATH).child(user!!.uid).child(mQuestion.questionUid)
+            mFavoriteRef.addChildEventListener(FaroriteListener)
 
-
-
-            //お気に入り登録済かどうかFirebaseを参照
-            //mDataBaseReference = FirebaseDatabase.getInstance().reference
-            //mDataBaseReference.addValueEventListener( object : ValueEventListener {
-            //override fun onDataChange(dataSnapshot: DataSnapshot) {
-            //val value = dataSnapshot.getValue
-            //}
-            //override fun onCancelled(error: DatabaseError) {}
-
-
-        } else if (user != null && mFarorite == null) {
-
-            like_fab.show()
-            Log.d("tttaaaggg","ログインしていてかつお気に入り未登録")
-
-            //画像を変更
-            like_fab.setImageResource(R.drawable.baseline_favorite_border_black_36)
-
-
-
-        }
-
-
-        //お気に入りボタンをタップした場合
-        like_fab.setOnClickListener {
-
-            if (mlike == false) {
-
-                //スナックバー
-                val view = findViewById<View>(android.R.id.content)
-                Snackbar.make(view, "お気に入りに追加しました", Snackbar.LENGTH_SHORT).show()
+            if ( mFarorite != null ) {
 
                 //画像を変更
                 like_fab.setImageResource(R.drawable.baseline_favorite_black_36)
@@ -190,50 +163,63 @@ class QuestionDetailActivity : AppCompatActivity() {
                 //フラグを立てる
                 mlike = true
 
-                //お気に入りを保存
-                mDataBaseReference = FirebaseDatabase.getInstance().reference
-                val genreRef = mDataBaseReference.child(favoritesPATH).child(user!!.uid)
-                    .child(mQuestion.questionUid)
-                val data = HashMap<String, String>()
-                // genre
-                data["genre"] = mQuestion.genre.toString() //dateのキーはString型　genreはInt型
-                genreRef.setValue(data)
+                return
+            }
 
-                Log.d("tttaaaggg",mFarorite)
+            //お気に入りボタンをタップした場合
+            like_fab.setOnClickListener {
 
-                return@setOnClickListener
+                if (mlike == false) {
 
-            } else if (mlike == true) {
+                    //スナックバー
+                    val view = findViewById<View>(android.R.id.content)
+                    Snackbar.make(view, "お気に入りに追加しました", Snackbar.LENGTH_SHORT).show()
 
-                //スナックバー
-                val view = findViewById<View>(android.R.id.content)
-                Snackbar.make(view, "お気に入りから削除しました", Snackbar.LENGTH_SHORT).show()
+                    //画像を変更
+                    like_fab.setImageResource(R.drawable.baseline_favorite_black_36)
 
-                //画像を変更
-                like_fab.setImageResource(R.drawable.baseline_favorite_border_black_36)
+                    //フラグを立てる
+                    mlike = true
 
-                //フラグを落とす
-                mlike = false
+                    //お気に入りを保存
+                    mDataBaseReference = FirebaseDatabase.getInstance().reference
+                    val genreRef = mDataBaseReference.child(favoritesPATH).child(user!!.uid).child(mQuestion.questionUid)
+                    val data = HashMap<String, String>()
+                    // genre
+                    data["genre"] = mQuestion.genre.toString() //dateのキーはString型　genreはInt型
+                    genreRef.setValue(data)
 
-                //お気に入りを削除
-                mDataBaseReference = FirebaseDatabase.getInstance().reference
-                val genreRef = mDataBaseReference.child(favoritesPATH).child(user!!.uid)
-                    .child(mQuestion.questionUid)
-                genreRef.removeValue()
+                    return@setOnClickListener
 
-                return@setOnClickListener
+                } else if (mlike == true) {
+
+                    //スナックバー
+                    val view = findViewById<View>(android.R.id.content)
+                    Snackbar.make(view, "お気に入りから削除しました", Snackbar.LENGTH_SHORT).show()
+
+                    //画像を変更
+                    like_fab.setImageResource(R.drawable.baseline_favorite_border_black_36)
+
+                    //フラグを落とす
+                    mlike = false
+
+                    //お気に入りを削除
+                    mDataBaseReference = FirebaseDatabase.getInstance().reference
+                    val genreRef = mDataBaseReference.child(favoritesPATH).child(user!!.uid)
+                        .child(mQuestion.questionUid)
+                    genreRef.removeValue()
+
+                    return@setOnClickListener
+                }
+
             }
 
         }
-
 
 
         val dataBaseReference = FirebaseDatabase.getInstance().reference
         mAnswerRef = dataBaseReference.child(ContentsPATH).child(mQuestion.genre.toString()).child(mQuestion.questionUid).child(AnswersPATH)
         mAnswerRef.addChildEventListener(mEventListener)
 
-        //お気に入り
-        mFavoriteRef = dataBaseReference.child(favoritesPATH).child(user!!.uid).child(mQuestion.genre.toString())
-        mFavoriteRef.addChildEventListener(FaroriteListener)
     }
 }

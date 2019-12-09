@@ -119,6 +119,7 @@ class QuestionDetailActivity : AppCompatActivity() {
         val extras = intent.extras
         mQuestion = extras.get("question") as Question
 
+
         //UI設定
         title = mQuestion.title
 

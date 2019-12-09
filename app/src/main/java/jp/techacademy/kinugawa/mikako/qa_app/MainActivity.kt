@@ -14,28 +14,25 @@ import android.view.MenuItem
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import android.support.design.widget.Snackbar
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.ChildEventListener
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
+import android.support.v4.content.ContextCompat.startActivity
 import android.util.Base64
 import android.widget.ListView
+import com.google.firebase.database.*
 
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
-    private  lateinit var mToolbar: Toolbar
-    private var mGenre = 0
+    private lateinit var mToolbar: Toolbar
 
     private lateinit var mDatabaseReference: DatabaseReference
     private lateinit var mListView: ListView
     private lateinit var mQuestionArrayList: ArrayList<Question>
     private lateinit var mAdapter: QuestionsListAdapter
-
     private var mGenreRef: DatabaseReference? = null
+    private var mGenre = 0
 
     private val mEventListener = object : ChildEventListener {
+        //質問が追加された時に呼ばれるメソッド
         override fun onChildAdded(dataSnapshot: DataSnapshot, s: String?) {
             val map = dataSnapshot.value as Map<String, String>
             val title = map["title"] ?: ""
@@ -63,12 +60,15 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 }
             }
 
-            val question = Question(title, body, name, uid, dataSnapshot.key ?: "",
-                mGenre, bytes, answerArrayList)
+            val question = Question(
+                title, body, name, uid, dataSnapshot.key ?: "",
+                mGenre, bytes, answerArrayList
+            )
             mQuestionArrayList.add(question)
             mAdapter.notifyDataSetChanged()
         }
 
+        //リスト内のアイテムに対する変更がないか onChildChanged
         override fun onChildChanged(dataSnapshot: DataSnapshot, s: String?) {
             val map = dataSnapshot.value as Map<String, String>
 
@@ -107,12 +107,15 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
         mToolbar = findViewById(R.id.toolbar)
         setSupportActionBar(mToolbar)
 
+        //右下のボタンを押した時
         val fab = findViewById<FloatingActionButton>(R.id.fab)
         fab.setOnClickListener { view ->
             // ジャンルを選択していない場合（mGenre == 0）はエラーを表示するだけ
@@ -137,14 +140,16 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
 
 
-        // ナビゲーションドロワーの設定
+        // ナビゲーションドロワーの設定　onResume()に書くべき？
         val drawer = findViewById<DrawerLayout>(R.id.drawer_layout)
-        val toggle = ActionBarDrawerToggle(this, drawer, mToolbar, R.string.app_name, R.string.app_name)
+        val toggle =
+            ActionBarDrawerToggle(this, drawer, mToolbar, R.string.app_name, R.string.app_name)
         drawer.addDrawerListener(toggle)
         toggle.syncState()
 
         val navigationView = findViewById<NavigationView>(R.id.nav_view)
         navigationView.setNavigationItemSelectedListener(this)
+
 
         // Firebase
         mDatabaseReference = FirebaseDatabase.getInstance().reference
@@ -155,6 +160,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         mQuestionArrayList = ArrayList<Question>()
         mAdapter.notifyDataSetChanged()
 
+        //リストのセルをタップしたら
         mListView.setOnItemClickListener { parent, view, position, id ->
             // Questionのインスタンスを渡して質問詳細画面を起動する
             val intent = Intent(applicationContext, QuestionDetailActivity::class.java)
@@ -165,11 +171,24 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     override fun onResume() {
         super.onResume()
+
         val navigationView = findViewById<NavigationView>(R.id.nav_view)
+        val user = FirebaseAuth.getInstance().currentUser
 
         // 1:趣味を既定の選択とする
-        if(mGenre == 0) {
+        if (mGenre == 0) {
             onNavigationItemSelected(navigationView.menu.getItem(0))
+        }
+
+
+        if (user != null) {
+            // ログインしていればお気に入りを表示する
+            navigationView.menu.getItem(4).setVisible(true)
+
+        } else if (user == null) {
+            // ログインしていなければお気に入りを非表示にする
+            navigationView.menu.getItem(4).setVisible(false)
+
         }
     }
 
@@ -182,20 +201,22 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     //メニュー選択された時の処理
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val id = item.itemId
-
+        //設定ボタン
         if (id == R.id.action_settings) {
             val intent = Intent(applicationContext, SettingActivity::class.java)
             startActivity(intent)
             return true
+            //★ボタン
+        } else if (id == R.id.like_settings) {
+            //todo レビューお願いします表示
+            return true
         }
-
         return super.onOptionsItemSelected(item)
     }
 
     //ドロワーのメニューが選択された時の処理
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         val id = item.itemId
-
         if (id == R.id.nav_hobby) {
             mToolbar.title = "趣味"
             mGenre = 1
@@ -209,10 +230,14 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             mToolbar.title = "コンピューター"
             mGenre = 4
         } else if (id == R.id.nav_favorite) {
-            mToolbar.title = "お気に入り"
-            mGenre = 5
+            //mToolbar.title = "お気に入り"
+            //mGenre = 5
+            val intent = Intent(applicationContext, FavoriteActivity::class.java)
+            startActivity(intent)
+
         }
 
+        //ドロワーを閉じる？
         val drawer = findViewById<DrawerLayout>(R.id.drawer_layout)
         drawer.closeDrawer(GravityCompat.START)
 
@@ -229,5 +254,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         mGenreRef!!.addChildEventListener(mEventListener)
 
         return true
+
     }
 }

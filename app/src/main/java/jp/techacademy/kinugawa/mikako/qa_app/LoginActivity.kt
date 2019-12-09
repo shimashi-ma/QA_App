@@ -74,7 +74,7 @@ class LoginActivity : AppCompatActivity() {
                     val name = nameText.text.toString()
 
                     val data = HashMap<String, String>()  //Firebaseは、データをKeyとValueの組み合わせで保存
-                    data["名前"] = name
+                    data["name"] = name
                     userRef.setValue(data)  //DatabaseReferenceが指し示すKeyにValueを保存するには setValue メソッドを使用
 
                     // 表示名をPrefarenceに保存する
@@ -86,7 +86,7 @@ class LoginActivity : AppCompatActivity() {
                     userRef.addListenerForSingleValueEvent(object : ValueEventListener {
                         override fun onDataChange(snapshot: DataSnapshot) {
                             val data = snapshot.value as Map<*, *>?
-                            saveName(data!!["なまえ"] as String)
+                            saveName(data!!["name"] as String)
                         }
 
                         override fun onCancelled(firebaseError: DatabaseError) {}   //使わないけど実装はいるってこと？

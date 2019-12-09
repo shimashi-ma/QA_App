@@ -18,6 +18,8 @@ import android.support.v4.content.ContextCompat.startActivity
 import android.util.Base64
 import android.widget.ListView
 import com.google.firebase.database.*
+import android.support.v7.app.AlertDialog
+import android.util.Log
 
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
@@ -209,9 +211,28 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             //★ボタン
         } else if (id == R.id.like_settings) {
             //todo レビューお願いします表示
+            showAlertDialog()
             return true
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    //★ボタンの実装
+    private fun showAlertDialog() {
+        val alertDialogBuilder = AlertDialog.Builder(this)
+        alertDialogBuilder.setTitle("いつもありがとうございます！")
+        alertDialogBuilder.setMessage("よかったらレビューお願いします。")
+
+        alertDialogBuilder.setPositiveButton("レビューを書く"){dialog, which ->
+            Log.d("test", "レビューを書いてくれるらしい")
+        }
+        alertDialogBuilder.setNegativeButton("閉じる"){dialog, which ->
+            Log.d("test", "閉じる")
+        }
+
+        // AlertDialogを作成して表示する
+        val alertDialog = alertDialogBuilder.create()
+        alertDialog.show()
     }
 
     //ドロワーのメニューが選択された時の処理

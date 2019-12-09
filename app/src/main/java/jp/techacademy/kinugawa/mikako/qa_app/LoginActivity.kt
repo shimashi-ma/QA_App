@@ -89,7 +89,7 @@ class LoginActivity : AppCompatActivity() {
                             saveName(data!!["name"] as String)
                         }
 
-                        override fun onCancelled(firebaseError: DatabaseError) {}   //使わないけど実装はいるってこと？
+                        override fun onCancelled(firebaseError: DatabaseError) {}
                     })
                 }
 
